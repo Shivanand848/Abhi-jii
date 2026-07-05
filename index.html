@@ -197,11 +197,10 @@ const CONFIG = {
   STORE_NAME: "Abhi jiii",
   TAGLINE: "Your everyday neighbourhood store",
   CURRENCY: "₹",
-  // STEP 1: Formspree par account banao / login karo with: masterbabu@gmail.com
-  // STEP 2: New Form banao, jo endpoint mile use neeche paste karo.
-  // Example: "https://formspree.io/f/abcdwxyz"
-  FORMSPREE_URL: "https://formspree.io/f/YOUR_FORM_ID",
-  ORDER_EMAIL: "masterbabu@gmail.com",
+  // Paste your Formspree endpoint below, e.g. "https://formspree.io/f/xxxxxxx"
+  // Create one at https://formspree.io using masterbabu3355@gmail.com so
+  // order notifications land in that inbox.
+  FORMSPREE_URL: "https://formspree.io/f/mqevndnk",
   // NOTE: the hero image link you supplied was a webpage (a magnific.com
   // preview page), not a direct image file, so it can't be loaded as an
   // <img>/background-image. Swap this for any direct .jpg/.png URL you like.
@@ -709,30 +708,14 @@ function renderCheckout(){
     const orderSummaryText = lines.map(l => `${l.product.name} x${l.qty} = ${fmt(l.lineTotal)}`).join("\n");
 
     const payload = {
-      _subject: `New Order Received — ${CONFIG.STORE_NAME} — ${fmt(subtotal)}`,
-      send_to: CONFIG.ORDER_EMAIL,
-
-      customer_name: form.name.value,
-      customer_email: form.email.value,
-      customer_phone: form.phone.value,
-      delivery_address: form.address.value,
-      customer_notes: form.notes.value || "No notes",
-
-      order_items: orderSummaryText,
+      name: form.name.value,
+      email: form.email.value,
+      phone: form.phone.value,
+      address: form.address.value,
+      notes: form.notes.value,
+      order_summary: orderSummaryText,
       order_total: fmt(subtotal),
-      order_date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-
-      cart_full_detail: JSON.stringify(
-        lines.map(l => ({
-          product_id: l.id,
-          product_name: l.product.name,
-          quantity: l.qty,
-          price_each: fmt(l.product.price),
-          line_total: fmt(l.lineTotal)
-        })),
-        null,
-        2
-      )
+      cart_json: JSON.stringify(lines.map(l => ({ id: l.id, name: l.product.name, qty: l.qty, price: l.product.price, lineTotal: l.lineTotal })))
     };
 
     try {
