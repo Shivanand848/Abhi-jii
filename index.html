@@ -705,17 +705,82 @@ function renderCheckout(){
     submitBtn.textContent = "Placing order…";
 
     const form = e.target;
-    const orderSummaryText = lines.map(l => `${l.product.name} x${l.qty} = ${fmt(l.lineTotal)}`).join("\n");
+    const now = new Date();
+    const orderId = "ABHI-" + now.getFullYear()
+      + String(now.getMonth() + 1).padStart(2, "0")
+      + String(now.getDate()).padStart(2, "0")
+      + "-" + Math.floor(1000 + Math.random() * 9000);
+
+    const orderDate = now.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+
+    const itemsText = lines.map((l, index) =>
+      `${index + 1}. ${l.product.name}
+` +
+      `   Qty: ${l.qty}
+` +
+      `   Price: ${fmt(l.product.price)}
+` +
+      `   Total: ${fmt(l.lineTotal)}`
+    ).join("
+
+");
+
+    const professionalOrderMessage = `🛒 NEW ORDER RECEIVED
+━━━━━━━━━━━━━━━━━━━━
+
+Order ID: ${orderId}
+Order Date: ${orderDate}
+
+CUSTOMER DETAILS
+Name: ${form.name.value}
+Email: ${form.email.value}
+Phone: ${form.phone.value}
+
+DELIVERY ADDRESS
+${form.address.value}
+
+ORDER ITEMS
+${itemsText}
+
+PAYMENT SUMMARY
+Subtotal: ${fmt(subtotal)}
+Delivery: To be confirmed
+Grand Total: ${fmt(subtotal)}
+
+CUSTOMER NOTES
+${form.notes.value ? form.notes.value : "No notes added."}
+
+━━━━━━━━━━━━━━━━━━━━
+Order from: ${CONFIG.STORE_NAME} — Everyday Store`;
 
     const payload = {
-      name: form.name.value,
-      email: form.email.value,
-      phone: form.phone.value,
-      address: form.address.value,
-      notes: form.notes.value,
-      order_summary: orderSummaryText,
-      order_total: fmt(subtotal),
-      cart_json: JSON.stringify(lines.map(l => ({ id: l.id, name: l.product.name, qty: l.qty, price: l.product.price, lineTotal: l.lineTotal })))
+      _subject: `🛒 New Order ${orderId} - ${CONFIG.STORE_NAME}`,
+      order_id: orderId,
+      order_date: orderDate,
+      customer_name: form.name.value,
+      customer_email: form.email.value,
+      customer_phone: form.phone.value,
+      delivery_address: form.address.value,
+      customer_notes: form.notes.value || "No notes added.",
+      order_items: itemsText,
+      subtotal: fmt(subtotal),
+      delivery: "To be confirmed",
+      grand_total: fmt(subtotal),
+      message: professionalOrderMessage,
+      cart_json: JSON.stringify(lines.map(l => ({
+        id: l.id,
+        name: l.product.name,
+        qty: l.qty,
+        price: l.product.price,
+        lineTotal: l.lineTotal
+      })))
     };
 
     try {
