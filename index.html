@@ -720,17 +720,9 @@ function renderCheckout(){
       hour12: true
     });
 
-    const itemsText = lines.map((l, index) =>
-      `${index + 1}. ${l.product.name}
-` +
-      `   Qty: ${l.qty}
-` +
-      `   Price: ${fmt(l.product.price)}
-` +
-      `   Total: ${fmt(l.lineTotal)}`
-    ).join("
-
-");
+    const orderItems = lines.map((l, index) => {
+      return `${index + 1}. ${l.product.name}\n   Qty: ${l.qty}\n   Price: ${fmt(l.product.price)}\n   Total: ${fmt(l.lineTotal)}`;
+    }).join("\n\n");
 
     const professionalOrderMessage = `🛒 NEW ORDER RECEIVED
 ━━━━━━━━━━━━━━━━━━━━
@@ -747,7 +739,7 @@ DELIVERY ADDRESS
 ${form.address.value}
 
 ORDER ITEMS
-${itemsText}
+${orderItems}
 
 PAYMENT SUMMARY
 Subtotal: ${fmt(subtotal)}
@@ -769,7 +761,7 @@ Order from: ${CONFIG.STORE_NAME} — Everyday Store`;
       customer_phone: form.phone.value,
       delivery_address: form.address.value,
       customer_notes: form.notes.value || "No notes added.",
-      order_items: itemsText,
+      order_items: orderItems,
       subtotal: fmt(subtotal),
       delivery: "To be confirmed",
       grand_total: fmt(subtotal),
@@ -785,7 +777,6 @@ Order from: ${CONFIG.STORE_NAME} — Everyday Store`;
 
     try {
       if (CONFIG.FORMSPREE_URL.includes("YOUR_FORM_ID")){
-        // Formspree not configured yet — simulate success so the flow can be tested.
         console.warn("Formspree URL not set in CONFIG — order was not actually sent anywhere.");
         await new Promise(r => setTimeout(r, 600));
       } else {
@@ -796,7 +787,7 @@ Order from: ${CONFIG.STORE_NAME} — Everyday Store`;
         });
         if (!res.ok) throw new Error("Formspree request failed");
       }
-      showOrderSuccess();
+      showOrderSuccess(orderId);
     } catch (err){
       submitBtn.disabled = false;
       submitBtn.textContent = `Place Order — ${fmt(subtotal)}`;
@@ -806,7 +797,7 @@ Order from: ${CONFIG.STORE_NAME} — Everyday Store`;
   });
 }
 
-function showOrderSuccess(){
+function showOrderSuccess(orderId){
   clearCart();
   const page = document.getElementById("page");
   page.innerHTML = `
@@ -814,7 +805,7 @@ function showOrderSuccess(){
       <div class="stamp-success">
         <div class="stamp">ORDER CONFIRMED ✓</div>
         <h2>Thank you for shopping with ${CONFIG.STORE_NAME}!</h2>
-        <p>We've received your order and will reach out shortly to confirm delivery details.</p>
+        <p>We've received your order and will reach out shortly to confirm delivery details.<br><strong>Order ID: ${orderId || ""}</strong></p>
         <p style="color:var(--ink-soft); font-size:.9rem;">Redirecting you to the home page in a few seconds…</p>
       </div>
     </div>
